@@ -1,49 +1,143 @@
-import { Badge } from "@chakra-ui/react";
-import { Stack, Image } from "@chakra-ui/react";
-import { useEffect, useRef, useState } from "react";
+import {
+  Center,
+  Input,
+  InputGroup,
+  InputLeftElement,
+  VStack,
+  HStack,
+  Stack,
+  Image,
+  Badge,
+  Button,
+  CircularProgress,
+  useDisclosure,
+} from "@chakra-ui/react";
+import { createRef, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { useSearchParams } from "react-router-dom";
+import { ContainerNotFoundDialog } from "../components/ContainerNotFoundDialog";
 import { containerIcon } from "../components/Icons";
+import { fetchAllContainers } from "../services/Tableland";
+import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import { useNavigate } from "react-router-dom";
 
 function Map() {
   const [searchParams] = useSearchParams();
-  const containerId = searchParams.get("containerId");
+
   const [containers, setContainers] = useState([]);
+  const [containerId, setContainerId] = useState(
+    searchParams.get("containerId")
+  );
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const navigate = useNavigate();
 
   const map = useRef();
-  const tableLandBase = "https://testnet.tableland.network/query?s=";
+  const searchBar = useRef();
+
+  //container id -> marker
+  const markers = useMemo(() => {
+    const refs = {};
+    containers.forEach((container) => {
+      refs[container[4]] = createRef(null);
+    });
+    return refs;
+  }, [containers]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch(
-        tableLandBase + "select * from TRAXA_NFT_REPOSITORY_80001_1923"
+      const data = await fetchAllContainers(
+        "select * from TRAXA_NFT_REPOSITORY_80001_1923"
       );
 
-      const data = await res.json();
-
-      //Populate map
-      setContainers(data.rows);
-
-      //Find container
-      if (containerId) {
-        const container = data.rows.find((it) => containerId === it[1]);
-
-        if (container) {
-          var position = container[4].split(" ").map((x) => parseFloat(x));
-          map.current.setView(position, 14);
-        }
-      }
+      setContainers(data);
     };
 
     fetchData().catch(console.error);
-  }, [containerId]);
+  }, []);
+
+  useEffect(() => {
+    searchBar.current.value = containerId;
+
+    //Find container
+    if (containerId && containers.length > 0) {
+      const container = containers.find((it) => containerId === it[1]);
+
+      if (container && map.current) {
+        var position = container[4].split(" ").map((x) => parseFloat(x));
+        position[0] += 0.0013;
+
+        //Fly to container position
+        map.current.flyTo(position, 18, {
+          animate: true,
+          duration: 0.5,
+        });
+
+        //Open container popup
+        markers[container[4]].current.openPopup();
+      } else {
+        //Show dialog
+        onOpen();
+      }
+    }
+  }, [containers, containerId]);
+
+  useEffect(
+    () => setContainerId(searchParams.get("containerId")),
+    [searchParams]
+  );
+
+  function search(query) {
+    if (query && query !== "") navigate("/map?containerId=" + query);
+  }
 
   return (
     <div>
+      <ContainerNotFoundDialog
+        onClose={onClose}
+        isOpen={isOpen}
+        containerId={containerId}
+      />
+
+      {containers.length > 0 || (
+        <Center className="w-screen h-screen z-[5000] fixed bg-white">
+          <VStack spacing={4}>
+            <CircularProgress isIndeterminate color="orange.500" className="" />
+            <span>Loading map</span>
+          </VStack>
+        </Center>
+      )}
+
+      <HStack className="fixed top-4 z-[900] w-screen px-2 sm:px-0 sm:w-6/12 sm:translate-x-1/2 rounded-md">
+        <InputGroup className="bg-white rounded-md">
+          <InputLeftElement
+            pointerEvents="none"
+            children={<MagnifyingGlassIcon width={20} />}
+          />
+          <Input
+            placeholder="Search container..."
+            defaultValue={containerId}
+            variant="outline"
+            ref={searchBar}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") search(searchBar.current.value);
+            }}
+            className="bg-white"
+          />
+        </InputGroup>
+        <Button
+          variant="solid"
+          colorScheme="orange"
+          children="Search"
+          onClick={() => search(searchBar.current.value)}
+        />
+      </HStack>
+
       <MapContainer
         style={{ height: "100vh" }}
         center={[54.989, 73.369]}
         zoom={3}
+        zoomControl={false}
         ref={map}
         scrollWheelZoom={true}
       >
@@ -56,10 +150,11 @@ function Map() {
           <Marker
             key={it}
             position={it[4].split(" ").map((x) => parseFloat(x))}
+            ref={markers[it[4]]}
             icon={containerIcon}
           >
             <Popup maxWidth={500} closeButton={false}>
-              <Stack width={400}>
+              <Stack width={400} spacing={0}>
                 <a href={it[7]} target="_blank" rel="noreferrer">
                   <Image
                     src={it[7]}
@@ -69,13 +164,15 @@ function Map() {
                     className="object-cover w-full h-96 rounded-xl"
                   />
                 </a>
-
-                <Stack direction="row" alignItems="center">
-                  <h1 className="text-xl font-bold leading-10">{it[1]}</h1>
-                  <Badge variant="outline">
+                <Stack direction="row" alignItems="center" className="pt-2">
+                  <h1 className="text-xl font-bold">{it[1]}</h1>
+                  <Badge variant="outline" colorScheme="orange">
                     {it[2] === "V" ? "Vertical" : "Horizontal"}
                   </Badge>
                 </Stack>
+                <span>
+                  Last seen: {new Date(parseInt(it[3])).toLocaleString()}
+                </span>
               </Stack>
             </Popup>
           </Marker>
