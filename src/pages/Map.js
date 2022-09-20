@@ -39,7 +39,7 @@ function Map() {
   const markers = useMemo(() => {
     const refs = {};
     containers.forEach((container) => {
-      refs[container[4]] = createRef(null);
+      refs[container.container_gps] = createRef(null);
     });
     return refs;
   }, [containers]);
@@ -61,10 +61,14 @@ function Map() {
 
     //Find container
     if (containerId && containers.length > 0) {
-      const container = containers.find((it) => containerId === it[1]);
+      const container = containers.find(
+        (it) => containerId === it.container_id
+      );
 
       if (container && map.current) {
-        var position = container[4].split(" ").map((x) => parseFloat(x));
+        var position = container.container_gps
+          .split(" ")
+          .map((x) => parseFloat(x));
         position[0] += 0.0013;
 
         //Fly to container position
@@ -74,7 +78,7 @@ function Map() {
         });
 
         //Open container popup
-        markers[container[4]].current.openPopup();
+        markers[container.container_gps].current.openPopup();
       } else {
         //Show dialog
         onOpen();
@@ -149,15 +153,15 @@ function Map() {
         {containers.map((it) => (
           <Marker
             key={it}
-            position={it[4].split(" ").map((x) => parseFloat(x))}
-            ref={markers[it[4]]}
+            position={it.container_gps.split(" ").map((x) => parseFloat(x))}
+            ref={markers[it.container_gps]}
             icon={containerIcon}
           >
             <Popup maxWidth={500} closeButton={false}>
               <Stack width={400} spacing={0}>
-                <a href={it[7]} target="_blank" rel="noreferrer">
+                <a href={it.filecoin_url} target="_blank" rel="noreferrer">
                   <Image
-                    src={it[7]}
+                    src={it.filecoin_url}
                     fallback={
                       <div className="w-full h-96 bg-gray-400 rounded-xl"></div>
                     }
@@ -165,13 +169,14 @@ function Map() {
                   />
                 </a>
                 <Stack direction="row" alignItems="center" className="pt-2">
-                  <h1 className="text-xl font-bold">{it[1]}</h1>
+                  <h1 className="text-xl font-bold">{it.container_id}</h1>
                   <Badge variant="outline" colorScheme="orange">
-                    {it[2] === "V" ? "Vertical" : "Horizontal"}
+                    {it.container_type === "V" ? "Vertical" : "Horizontal"}
                   </Badge>
                 </Stack>
                 <span>
-                  Last seen: {new Date(parseInt(it[3])).toLocaleString()}
+                  Last seen:{" "}
+                  {new Date(parseInt(it.container_time)).toLocaleString()}
                 </span>
               </Stack>
             </Popup>

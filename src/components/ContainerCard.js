@@ -10,7 +10,7 @@ import {
 const now = new Date().getTime();
 
 function ContainerCard({ container }) {
-  const elapsed = now - parseInt(container[3]);
+  const elapsed = now - parseInt(container.container_time);
   const elapsedString = (it) => {
     it = it / 1000;
 
@@ -27,12 +27,14 @@ function ContainerCard({ container }) {
       <HStack>
         <Image
           className="w-12 bg-gray-200 rounded-full aspect-square"
-          src={container[7]}
+          src={container.filecoin_url}
         ></Image>
         <div className="pl-2 text-gray-600">
-          <span className="font-medium text-black">{container[1]}</span>{" "}
+          <span className="font-medium text-black">
+            {container.container_id}
+          </span>{" "}
           <Badge variant="outline" colorScheme="orange">
-            {container[2] === "V" ? "Vertical" : "Horizontal"}
+            {container.container_type === "V" ? "Vertical" : "Horizontal"}
           </Badge>
           <br />
           {elapsedString(elapsed)}

@@ -3,8 +3,7 @@ const tableLandBase = "https://testnet.tableland.network/query?s=";
 async function fetchAllContainers(query) {
   const res = await fetch(tableLandBase + query);
 
-  const data = await res.json();
-  return data.rows;
+  return await res.json();
 }
 
 async function fetchLatestContainers(limit = 10) {
@@ -14,8 +13,7 @@ async function fetchLatestContainers(limit = 10) {
       limit
   );
 
-  const data = await res.json();
-  return data.rows;
+  return await res.json();
 }
 
 export { fetchAllContainers, fetchLatestContainers };

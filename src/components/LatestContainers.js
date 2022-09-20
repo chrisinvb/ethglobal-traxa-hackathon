@@ -13,6 +13,7 @@ function LatestContainers({ containerClicked, direction, className }) {
     else {
       const data = await fetchLatestContainers(5);
       cache.current = data;
+
       setLatestContainers(data);
     }
   };
@@ -24,14 +25,14 @@ function LatestContainers({ containerClicked, direction, className }) {
   return (
     <Stack
       direction={direction || "row"}
-      className={"overflow-auto pb-2 w-full h-[6rem]" + (className || "")}
+      className={"overflow-auto pb-2 w-full h-[6.5rem]" + (className || "")}
     >
       {latestContainers.length === 0
         ? [1, 2, 3, 4, 5].map((it) => <SkeletonCard key={it} />)
         : latestContainers.map((it) => (
             <Link
               key={it}
-              to={"/map?containerId=" + it[1]}
+              to={"/map?containerId=" + it.container_id}
               onClick={containerClicked}
             >
               <ContainerCard container={it} />
