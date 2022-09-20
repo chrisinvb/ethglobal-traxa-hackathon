@@ -23,7 +23,7 @@ function ContainerCard({ container }) {
   };
 
   return (
-    <Box p="5" minW="300px" borderWidth="1px" className="h-20 rounded-md">
+    <Box p="5" minW="300px" borderWidth="1px" className="rounded-md">
       <HStack>
         <Image
           className="w-12 bg-gray-200 rounded-full aspect-square"
@@ -46,10 +46,10 @@ function ContainerCard({ container }) {
 
 function SkeletonCard() {
   return (
-    <Box p="5" minW="300px" borderWidth="1px" className="h-20 rounded-md">
+    <Box p="5" minW="300px" borderWidth="1px" className="rounded-md">
       <HStack>
-        <SkeletonCircle className="aspect-square" size="10" />
-        <SkeletonText className="w-full" ml="2" noOfLines={2} spacing="1" />
+        <SkeletonCircle size={12} />
+        <SkeletonText className="flex-grow" ml="2" noOfLines={2} spacing="1" />
       </HStack>
     </Box>
   );

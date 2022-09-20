@@ -25,7 +25,7 @@ function LatestContainers({ containerClicked, direction, className }) {
   return (
     <Stack
       direction={direction || "row"}
-      className={"overflow-auto pb-2 w-full h-[6.5rem]" + (className || "")}
+      className={"overflow-auto pb-2 w-full" + (className || "")}
     >
       {latestContainers.length === 0
         ? [1, 2, 3, 4, 5].map((it) => <SkeletonCard key={it} />)
